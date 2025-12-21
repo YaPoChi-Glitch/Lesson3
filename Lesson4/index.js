@@ -50,12 +50,12 @@
 
 // console.log(finalPrice);
 
-const checkAge = (age) => {
-    if (age >= 18) {
-        return "Человек совершеннолетний";
-        } else {
-        return "Человек маленький";
-    }
-};
+// const checkAge = (age) => {
+//     if (age >= 18) {
+//         return "Человек совершеннолетний";
+//         } else {
+//         return "Человек маленький";
+//     }
+// };
 
-console.log(checkAge(12));
+// console.log(checkAge(12));

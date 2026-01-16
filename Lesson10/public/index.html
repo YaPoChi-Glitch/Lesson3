@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Темный Загрузчик</title>
+    <style>
+        body {
+            background-color: #121212;
+            color: #e0e0e0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .card {
+            background-color: #1e1e1e;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            text-align: center;
+            width: 350px;
+            border: 1px solid #333;
+        }
+        h2 { margin-top: 0; color: #fff; margin-bottom: 25px; }
+        
+        input[type="file"] {
+            margin-bottom: 20px;
+            color: #b0b0b0;
+            background: #2c2c2c;
+            padding: 10px;
+            border-radius: 8px;
+            width: 90%;
+            border: 1px dashed #555;
+        }
+
+        button {
+            background: linear-gradient(135deg, #6200ea, #3700b3);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            font-size: 16px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(98, 0, 234, 0.4);
+        }
+        
+        /* 👇 Стиль для сообщения об успехе */
+        #status-message {
+            margin-top: 20px;
+            font-weight: bold;
+            display: none; /* Скрыто по умолчанию */
+        }
+        .success { color: #00e676; } /* Зеленый цвет */
+        .error { color: #ff5252; }   /* Красный цвет */
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <h2>📤 Загрузка файла</h2>
+        
+        <form id="uploadForm" action="/upload" method="POST" enctype="multipart/form-data">
+            <input type="file" name="fileToUpload" required>
+            <br>
+            <button type="submit" id="submitBtn">Загрузить на сервер</button>
+        </form>
+
+        <div id="status-message"></div>
+    </div>
+
+    <script>
+        // 1. Находим элементы
+        const form = document.getElementById('uploadForm');
+        const messageBox = document.getElementById('status-message');
+        const btn = document.getElementById('submitBtn');
+
+        // 2. Слушаем отправку формы
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault(); // 🛑 Отменяем стандартную перезагрузку страницы
+
+            // Визуально показываем, что процесс пошел
+            btn.textContent = "Загрузка...";
+            btn.disabled = true;
+            messageBox.style.display = 'none';
+
+            // 3. Собираем данные из формы
+            const formData = new FormData(form);
+
+            try {
+                // 4. Отправляем на сервер "в тихом режиме"
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                // 5. Проверяем ответ сервера
+                if (response.ok) {
+                    messageBox.textContent = "✅ Файл успешно загружен!";
+                    messageBox.className = "success";
+                } else {
+                    messageBox.textContent = "❌ Ошибка загрузки";
+                    messageBox.className = "error";
+                }
+            } catch (err) {
+                console.error(err);
+                messageBox.textContent = "❌ Ошибка сети";
+                messageBox.className = "error";
+            } finally {
+                // Показываем сообщение и возвращаем кнопку
+                messageBox.style.display = 'block';
+                btn.textContent = "Загрузить на сервер";
+                btn.disabled = false;
+                form.reset(); // Очищаем поле файла
+            }
+        });
+    </script>
+
+</body>
+</html>

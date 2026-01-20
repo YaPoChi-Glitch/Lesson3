@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Файлообменник 2.0</title>
+    <style>
+        /* --- 1. Основной фон и шрифт --- */
+        body {
+            margin: 0;
+            padding: 40px 20px;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background: radial-gradient(circle at top left, #1e1e2f, #0f0f13);
+            color: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+
+        /* --- 2. Главный контейнер (Карточка) --- */
+        .container {
+            width: 100%;
+            max-width: 500px;
+            background: rgba(30, 30, 40, 0.8);
+            backdrop-filter: blur(20px); /* Эффект стекла */
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 40px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Заголовки */
+        h1 {
+            text-align: center;
+            font-size: 28px;
+            margin: 0 0 10px 0;
+            background: linear-gradient(90deg, #8a2be2, #4b0082);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 800;
+        }
+        .subtitle {
+            text-align: center;
+            color: #8888a0;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        /* --- 3. Зона выбора файла (Dashed Box) --- */
+        .drop-zone {
+            border: 2px dashed #4b4b65;
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.03);
+            padding: 40px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        .drop-zone:hover {
+            border-color: #7c4dff;
+            background: rgba(124, 77, 255, 0.05);
+        }
+        .drop-zone input[type="file"] {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+        .drop-icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+            display: block;
+        }
+        .drop-text {
+            color: #a0a0b0;
+            font-size: 14px;
+        }
+        .file-selected {
+            color: #ffffff;
+            font-weight: bold;
+        }
+
+        /* --- 4. Кнопка загрузки --- */
+        .btn-upload {
+            width: 100%;
+            margin-top: 20px;
+            padding: 16px;
+            border: none;
+            border-radius: 12px;
+            background: linear-gradient(90deg, #6c5ce7, #a29bfe);
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(108, 92, 231, 0.4);
+            transition: transform 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .btn-upload:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(108, 92, 231, 0.6); }
+        .btn-upload:disabled { opacity: 0.7; cursor: not-allowed; }
+
+        /* --- 5. Список файлов --- */
+        .list-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 40px;
+            margin-bottom: 15px;
+        }
+        .list-title { font-size: 18px; font-weight: bold; display: flex; align-items: center; gap: 8px; }
+        
+        .btn-refresh {
+            background: #00b894;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 20px;
+            color: white;
+            font-size: 12px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .btn-refresh:hover { background: #00a383; }
+
+        .file-list { display: flex; flex-direction: column; gap: 12px; }
+
+        .file-item {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: background 0.2s;
+        }
+        .file-item:hover { background: rgba(255, 255, 255, 0.08); }
+
+        .file-info { display: flex; align-items: center; gap: 12px; overflow: hidden; }
+        .file-icon { font-size: 24px; }
+        .file-name {
+            font-size: 14px;
+            color: #e0e0e0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 180px;
+        }
+        .file-meta { font-size: 11px; color: #66667a; margin-top: 2px; }
+
+        .actions { display: flex; gap: 8px; }
+        .btn-action {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.2s;
+        }
+        .btn-action:hover { opacity: 0.8; }
+        .btn-dl { background: #0984e3; color: white; text-decoration: none; }
+        .btn-del { background: #d63031; color: white; }
+
+        /* --- 6. Сообщения --- */
+        #status-message {
+            margin-bottom: 20px;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 14px;
+            font-weight: 500;
+            display: none;
+        }
+        .success { background: rgba(0, 184, 148, 0.2); color: #00b894; border: 1px solid #00b894; }
+        .error { background: rgba(214, 48, 49, 0.2); color: #ff7675; border: 1px solid #d63031; }
+
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div id="status-message"></div>
+
+        <h1>Файлообменник</h1>
+        <div class="subtitle">Загружайте файлы быстро и безопасно</div>
+
+        <form id="uploadForm">
+            <div class="drop-zone" id="dropZone">
+                <span class="drop-icon">📁</span>
+                <div class="drop-text" id="dropText">Нажмите или перетащите файл сюда</div>
+                <input type="file" name="fileToUpload" id="fileInput" required>
+            </div>
+            <button type="submit" class="btn-upload" id="submitBtn">ЗАГРУЗИТЬ</button>
+        </form>
+
+        <div class="list-header">
+            <div class="list-title">📋 Мои файлы</div>
+            <button class="btn-refresh" onclick="loadFiles()">↻ Обновить</button>
+        </div>
+
+        <div class="file-list" id="file-list">
+            <div style="text-align: center; color: #555;">Загрузка...</div>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('uploadForm');
+        const fileInput = document.getElementById('fileInput');
+        const dropText = document.getElementById('dropText');
+        const messageBox = document.getElementById('status-message');
+        const btn = document.getElementById('submitBtn');
+        const fileListContainer = document.getElementById('file-list');
+
+        // 1. Красивое отображение имени выбранного файла
+        fileInput.addEventListener('change', function() {
+            if (this.files && this.files.length > 0) {
+                dropText.textContent = `Выбран: ${this.files[0].name}`;
+                dropText.classList.add('file-selected');
+            } else {
+                dropText.textContent = "Нажмите или перетащите файл сюда";
+                dropText.classList.remove('file-selected');
+            }
+        });
+
+        // 2. Загрузка списка файлов
+        async function loadFiles() {
+            try {
+                const response = await fetch('/api/files');
+                const files = await response.json();
+                fileListContainer.innerHTML = '';
+
+                if (files.length === 0) {
+                    fileListContainer.innerHTML = '<div style="text-align: center; color: #555; padding: 20px;">Список пуст</div>';
+                    return;
+                }
+
+                files.forEach(fileName => {
+                    // Генерируем случайную дату для красоты (так как сервер пока не отдает дату)
+                    const date = new Date().toLocaleDateString(); 
+
+                    const item = document.createElement('div');
+                    item.className = 'file-item';
+                    item.innerHTML = `
+                        <div class="file-info">
+                            <span class="file-icon">📄</span>
+                            <div>
+                                <div class="file-name" title="${fileName}">${fileName}</div>
+                                <div class="file-meta">Дата: ${date}</div>
+                            </div>
+                        </div>
+                        <div class="actions">
+                            <a href="/uploads/${fileName}" class="btn-action btn-dl" target="_blank" title="Скачать">⬇</a>
+                            <button class="btn-action btn-del" onclick="deleteFile('${fileName}')" title="Удалить">✕</button>
+                        </div>
+                    `;
+                    fileListContainer.appendChild(item);
+                });
+            } catch (err) {
+                console.error(err);
+                fileListContainer.innerHTML = '<div style="color: #ff7675; text-align:center;">Ошибка загрузки списка</div>';
+            }
+        }
+
+        // 3. Удаление файла
+        async function deleteFile(fileName) {
+            if (!confirm(`Удалить файл "${fileName}"?`)) return;
+            try {
+                const res = await fetch(`/api/files/${fileName}`, { method: 'DELETE' });
+                if (res.ok) loadFiles();
+            } catch (err) { alert('Ошибка сети'); }
+        }
+
+        // 4. Отправка формы
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            btn.textContent = "ЗАГРУЗКА...";
+            btn.disabled = true;
+            messageBox.style.display = 'none';
+
+            const formData = new FormData(form);
+
+            try {
+                const response = await fetch('/upload', { method: 'POST', body: formData });
+                if (response.ok) {
+                    showMessage("✅ Файл успешно загружен!", "success");
+                    form.reset();
+                    dropText.textContent = "Нажмите или перетащите файл сюда";
+                    dropText.classList.remove('file-selected');
+                    loadFiles();
+                } else {
+                    showMessage("❌ Ошибка загрузки", "error");
+                }
+            } catch (err) {
+                showMessage("❌ Ошибка сети", "error");
+            } finally {
+                btn.textContent = "ЗАГРУЗИТЬ";
+                btn.disabled = false;
+            }
+        });
+
+        function showMessage(text, type) {
+            messageBox.textContent = text;
+            messageBox.className = type;
+            messageBox.style.display = 'block';
+        }
+
+        loadFiles();
+    </script>
+
+</body>
+</html>
